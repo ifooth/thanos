@@ -957,7 +957,7 @@ func (c *BucketCompactor) Compact(ctx context.Context) (rerr error) {
 			return errors.Wrap(err, "build compaction groups")
 		}
 
-		level.Info(c.logger).Log("msg", "start of compactions")
+		level.Info(c.logger).Log("msg", "start of compactionssdf")
 
 		// Send all groups found during this pass to the compaction workers.
 		var groupErrs terrors.MultiError

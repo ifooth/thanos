@@ -5,6 +5,7 @@ package http
 
 import (
 	"context"
+	"net"
 	"net/http"
 	"net/http/pprof"
 
@@ -83,6 +84,17 @@ func (s *Server) ListenAndServe() error {
 	}
 
 	return errors.Wrap(toolkit_web.ListenAndServe(s.srv, flags, s.logger), "serve HTTP and metrics")
+}
+
+// Serve for dualStack
+func (s *Server) Serve(l net.Listener) error {
+	level.Info(s.logger).Log("msg", "listening for requests and metrics", "address", s.opts.listen)
+	err := toolkit_web.Validate(s.opts.tlsConfigPath)
+	if err != nil {
+		return errors.Wrap(err, "server could not be started")
+	}
+	return errors.Wrap(toolkit_web.Serve(l, s.srv, &toolkit_web.FlagConfig{WebConfigFile: &s.opts.tlsConfigPath},
+		s.logger), "serve HTTP and metrics")
 }
 
 // Shutdown gracefully shuts down the server by waiting,

@@ -121,6 +121,7 @@ require (
 )
 
 require (
+	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.0.0-00010101000000-000000000000
 	go.opentelemetry.io/contrib/propagators/autoprop v0.38.0
 	go4.org/intern v0.0.0-20220617035311-6925f38cc365
 	golang.org/x/exp v0.0.0-20230124195608-d38c7dcee874
@@ -257,6 +258,8 @@ replace (
 	github.com/bradfitz/gomemcache => github.com/themihai/gomemcache v0.0.0-20180902122335-24332e2d58ab
 
 	github.com/vimeo/galaxycache => github.com/thanos-community/galaxycache v0.0.0-20211122094458-3a32041a1f1e
+
+	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc => go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.28.0
 
 	// Override due to https://github.com/weaveworks/common/issues/239
 	google.golang.org/grpc => google.golang.org/grpc v1.45.0

@@ -821,11 +821,15 @@ func (er *endpointRef) SupportsWithoutReplicaLabels() bool {
 }
 
 func (er *endpointRef) String() string {
-	mint, maxt := er.TimeRange()
-	return fmt.Sprintf(
-		"Addr: %s LabelSets: %v MinTime: %d MaxTime: %d",
-		er.addr, labelpb.PromLabelSetsToString(er.LabelSets()), mint, maxt,
-	)
+	// mint, maxt := er.TimeRange()
+	// bcs patch, 返回太长, 需要精简
+
+	ls := labelpb.PromLabelSetsToString(er.LabelSets())
+	if len(ls) > 64 {
+		ls = ls[:64] + "...(truncated)"
+	}
+
+	return fmt.Sprintf("Addr: %s LabelSets: %s", er.addr, ls)
 }
 
 func (er *endpointRef) Addr() (string, bool) {

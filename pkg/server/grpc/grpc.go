@@ -21,6 +21,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
@@ -31,7 +32,6 @@ import (
 
 	"github.com/thanos-io/thanos/pkg/component"
 	"github.com/thanos-io/thanos/pkg/prober"
-	"github.com/thanos-io/thanos/pkg/tracing"
 )
 
 // A Server defines parameters to serve RPC requests, a wrapper around grpc.Server.
@@ -81,14 +81,14 @@ func New(logger log.Logger, reg prometheus.Registerer, tracer opentracing.Tracer
 			grpc_recovery.UnaryServerInterceptor(grpc_recovery.WithRecoveryHandler(grpcPanicRecoveryHandler)),
 			met.UnaryServerInterceptor(),
 			tags.UnaryServerInterceptor(tagsOpts...),
-			tracing.UnaryServerInterceptor(tracer),
+			otelgrpc.UnaryServerInterceptor(),
 			grpc_logging.UnaryServerInterceptor(kit.InterceptorLogger(logger), logOpts...),
 		),
 		grpc_middleware.WithStreamServerChain(
 			grpc_recovery.StreamServerInterceptor(grpc_recovery.WithRecoveryHandler(grpcPanicRecoveryHandler)),
 			met.StreamServerInterceptor(),
 			tags.StreamServerInterceptor(tagsOpts...),
-			tracing.StreamServerInterceptor(tracer),
+			otelgrpc.StreamServerInterceptor(),
 			grpc_logging.StreamServerInterceptor(kit.InterceptorLogger(logger), logOpts...),
 		),
 	}...)

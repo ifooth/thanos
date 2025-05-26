@@ -6,6 +6,8 @@ package store
 import (
 	"context"
 	"fmt"
+	"net/textproto"
+	"strings"
 
 	"github.com/prometheus/prometheus/model/labels"
 	"github.com/thanos-io/thanos/pkg/store/storepb"
@@ -27,6 +29,7 @@ const (
 	ScopeClusterIDHeaderKey  = "X-Scope-Cluster-Id"
 	PartialResponseHeaderKey = "X-Partial-Response"
 	TraceParentKey           = "Traceparent"
+	LaneIDPrefix             = "X-Lane-"
 )
 
 // RequestIdHeaderKey :
@@ -43,6 +46,7 @@ func CopyLabelMatchContext(trgt, src context.Context) context.Context {
 	if !ok {
 		return WithRequestIDValue(trgt, requestID)
 	}
+	trgt = GRPCLaneValue(trgt, src)
 	return WithScopeClusterIDValue(WithRequestIDValue(WithLabelMatchValue(trgt, v), requestID), clusterID)
 }
 
@@ -76,6 +80,15 @@ func WithPartialResponseValue(ctx context.Context, partialResponse string) conte
 	return GRPCWithPartialResponseValue(newCtx, partialResponse)
 }
 
+// WithLaneValue WithLaneValue 设置值
+func WithLaneValue(ctx context.Context, lanekey, laneValue string) context.Context {
+	if lanekey == "" {
+		return ctx
+	}
+	newCtx := context.WithValue(ctx, lanekey, laneValue)
+	return GRPCWithLaneValue(newCtx, lanekey, laneValue)
+}
+
 // GRPCWithRequestIDValue : grpc 需要单独处理
 func GRPCWithRequestIDValue(ctx context.Context, id string) context.Context {
 	ctx = metadata.AppendToOutgoingContext(ctx, requestIDHeaderKey, id)
@@ -91,6 +104,12 @@ func GRPCWithScopeClusterIDValue(ctx context.Context, clusterID string) context.
 // GRPCWithPartialResponseValue
 func GRPCWithPartialResponseValue(ctx context.Context, partialResponse string) context.Context {
 	ctx = metadata.AppendToOutgoingContext(ctx, PartialResponseHeaderKey, partialResponse)
+	return ctx
+}
+
+// GRPCWithLaneValue
+func GRPCWithLaneValue(ctx context.Context, laneKey, laneValue string) context.Context {
+	ctx = metadata.AppendToOutgoingContext(ctx, laneKey, laneValue)
 	return ctx
 }
 
@@ -180,6 +199,21 @@ func GRPCTraceParentValue(trgt, src context.Context) context.Context {
 		return trgt
 	}
 	trgt = metadata.AppendToOutgoingContext(trgt, TraceParentKey, values[0])
+	return trgt
+}
+
+// GRPCLaneValue grpc透传x-lane
+func GRPCLaneValue(trgt, src context.Context) context.Context {
+	md, ok := metadata.FromOutgoingContext(src)
+	if !ok {
+		return trgt
+	}
+	for k, v := range md {
+		tmpKey := textproto.CanonicalMIMEHeaderKey(k)
+		if strings.HasPrefix(tmpKey, LaneIDPrefix) && len(v) > 0 {
+			trgt = metadata.AppendToOutgoingContext(trgt, tmpKey, v[0])
+		}
+	}
 	return trgt
 }
 
